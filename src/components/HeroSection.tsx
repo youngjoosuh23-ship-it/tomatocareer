@@ -60,7 +60,7 @@ export function HeroSection({ language, onStartClick }: Props) {
         </div>
 
         {/* s4: coral check badge — mid-left edge */}
-        <div className="shape-bob absolute" style={{ top: 220, left: '2%', width: 78, height: 78, '--rot': '-12deg', animationDelay: '-3s' } as React.CSSProperties}>
+        <div className="shape-bob absolute max-sm:hidden" style={{ top: 220, left: '2%', width: 78, height: 78, '--rot': '-12deg', animationDelay: '-3s' } as React.CSSProperties}>
           <svg viewBox="0 0 78 78" className="w-full h-full">
             <path d="M39 4 L48 12 L60 10 L62 22 L73 28 L66 38 L73 48 L62 54 L60 66 L48 64 L39 72 L30 64 L18 66 L16 54 L5 48 L12 38 L5 28 L16 22 L18 10 L30 12 Z" fill="#ec7a6a"/>
             <path d="M28 40 L36 47 L52 30" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -78,7 +78,7 @@ export function HeroSection({ language, onStartClick }: Props) {
         </div>
 
         {/* s6: cream cloud doc — bottom-left */}
-        <div className="shape-bob absolute" style={{ top: 480, left: '4%', width: 130, height: 110, '--rot': '-6deg', animationDelay: '-2.5s' } as React.CSSProperties}>
+        <div className="shape-bob absolute max-sm:hidden" style={{ top: 480, left: '4%', width: 130, height: 110, '--rot': '-6deg', animationDelay: '-2.5s' } as React.CSSProperties}>
           <svg viewBox="0 0 130 110" className="w-full h-full">
             <path d="M65 14 c-22 0 -38 14 -38 32 c-14 4 -22 14 -22 28 c0 18 16 30 36 30 h66 c20 0 30 -10 30 -26 c0 -16 -10 -26 -26 -28 c-2 -22 -22 -36 -46 -36 z" fill="#fbe9d4"/>
             <circle cx="55" cy="62" r="2.4" fill="#1d1d1b"/>
@@ -98,7 +98,7 @@ export function HeroSection({ language, onStartClick }: Props) {
         </div>
 
         {/* s8: yellow burst — bottom-right */}
-        <div className="shape-bob absolute" style={{ top: 480, right: '4%', width: 110, height: 110, '--rot': '8deg', animationDelay: '-3.5s' } as React.CSSProperties}>
+        <div className="shape-bob absolute max-sm:hidden" style={{ top: 480, right: '4%', width: 110, height: 110, '--rot': '8deg', animationDelay: '-3.5s' } as React.CSSProperties}>
           <svg viewBox="0 0 110 110" className="w-full h-full">
             <path d="M55 4 L62 18 L78 12 L74 28 L90 30 L80 42 L94 52 L78 56 L82 72 L66 70 L62 86 L52 76 L40 88 L36 72 L20 76 L24 60 L8 56 L20 44 L8 32 L24 28 L20 12 L36 18 L42 4 L52 16 Z" fill="#f5d35b"/>
             <circle cx="46" cy="46" r="2" fill="#1d1d1b"/>

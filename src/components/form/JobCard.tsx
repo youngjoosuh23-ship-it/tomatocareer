@@ -130,7 +130,7 @@ export function JobCard({
       </div>
 
       {/* Company + Role */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
         <div>
           <label style={FIELD_LABEL}>{t.companyName}</label>
           <input type="text" value={company.company_name}
@@ -147,7 +147,7 @@ export function JobCard({
 
       {/* JD input */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
           <label style={{ ...FIELD_LABEL, margin: 0 }}>{t.jobDescription}</label>
           <div style={{ display: 'flex', gap: 6 }}>
             {(['url', 'text', 'file'] as const).map(tab => {

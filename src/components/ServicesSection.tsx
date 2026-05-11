@@ -86,8 +86,7 @@ export function ServicesSection({ language }: Props) {
       }}
     >
       <div
-        className="max-w-[1100px] mx-auto"
-        style={{ padding: '80px 40px 100px' }}
+        className="max-w-[1100px] mx-auto px-5 py-16 sm:px-10 sm:py-24"
       >
         <h2
           style={{
@@ -117,10 +116,7 @@ export function ServicesSection({ language }: Props) {
         </p>
 
         {/* 3-column grid */}
-        <div
-          className="grid gap-14 max-sm:grid-cols-1 max-sm:gap-9"
-          style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
-        >
+        <div className="grid grid-cols-1 gap-9 sm:grid-cols-3 sm:gap-14">
           {c.cols.map((col, i) => (
             <div key={i}>
               {/* Top character icon */}
