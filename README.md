@@ -1,5 +1,5 @@
 # Tomato career
-![header](https://capsule-render.vercel.app/render?type=soft&color=auto&height=200&section=header&text=Tomato%20career&fontSize=70)
+
 
 
 # AI Career Decision Copilot
