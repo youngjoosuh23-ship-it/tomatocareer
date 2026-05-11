@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/((?!api/)(?!@)(?!node_modules/)(?!src/)(?!.*\\.[a-zA-Z0-9]{1,6}$).*)", "destination": "/index.html" }
+  ]
+}
