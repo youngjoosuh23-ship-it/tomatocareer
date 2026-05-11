@@ -1,5 +1,6 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+# Tomato career
+![header](https://capsule-render.vercel.app/render?type=soft&color=auto&height=200&section=header&text=Tomato%20career&fontSize=70)
+
 
 # AI Career Decision Copilot
 
