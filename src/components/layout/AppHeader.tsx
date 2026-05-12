@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, ListChecks, Sparkles, BarChart3, Briefcase } from 'lucide-react';
+import { History, ListChecks, Sparkles, BarChart3, Briefcase, Wand2 } from 'lucide-react';
 import { translations } from '../../lib/translations';
 import { AuthButton } from '../AuthButton';
 import { cn } from '../../lib/utils';
@@ -7,7 +7,7 @@ import { cn } from '../../lib/utils';
 interface AppHeaderProps {
   language: 'en' | 'ko' | 'zh';
   onLanguageChange: (lang: 'en' | 'ko' | 'zh') => void;
-  appMode: 'career' | 'corporate' | 'jobs';
+  appMode: 'career' | 'corporate' | 'jobs' | 'agent';
   view: 'form' | 'result' | 'rebuild' | 'history' | 'tracker';
   onLogoClick: () => void;
   onNavCareer: () => void;
@@ -15,6 +15,7 @@ interface AppHeaderProps {
   onNavJobs: () => void;
   onNavHistory: () => void;
   onNavTracker: () => void;
+  onNavAgent: () => void;
 }
 
 const TomatoLogo = () => (
@@ -44,15 +45,17 @@ export function AppHeader({
   onNavJobs,
   onNavHistory,
   onNavTracker,
+  onNavAgent,
 }: AppHeaderProps) {
   const t = translations[language];
 
   const navItems = [
-    { id: 'career-form', label: 'Career Copilot', icon: <Sparkles size={13} />, onClick: onNavCareer, active: appMode === 'career' && view !== 'history' && view !== 'tracker' },
-    { id: 'corporate',   label: 'Corporate Insight', icon: <BarChart3 size={13} />, onClick: onNavCorporate, active: appMode === 'corporate' },
-    { id: 'jobs',        label: 'Job Finder', icon: <Briefcase size={13} />, onClick: onNavJobs, active: appMode === 'jobs' },
-    { id: 'history',     label: t.history, icon: <History size={13} />, onClick: onNavHistory, active: appMode === 'career' && view === 'history' },
-    { id: 'tracker',     label: t.tracker, icon: <ListChecks size={13} />, onClick: onNavTracker, active: appMode === 'career' && view === 'tracker' },
+    { id: 'agent',       label: language === 'en' ? 'Auto Agent' : 'AI 자동 분석', icon: <Wand2 size={13} />, onClick: onNavAgent, active: appMode === 'agent', highlight: true },
+    { id: 'career-form', label: 'Career Copilot', icon: <Sparkles size={13} />, onClick: onNavCareer, active: appMode === 'career' && view !== 'history' && view !== 'tracker', highlight: false },
+    { id: 'corporate',   label: 'Corporate Insight', icon: <BarChart3 size={13} />, onClick: onNavCorporate, active: appMode === 'corporate', highlight: false },
+    { id: 'jobs',        label: 'Job Finder', icon: <Briefcase size={13} />, onClick: onNavJobs, active: appMode === 'jobs', highlight: false },
+    { id: 'history',     label: t.history, icon: <History size={13} />, onClick: onNavHistory, active: appMode === 'career' && view === 'history', highlight: false },
+    { id: 'tracker',     label: t.tracker, icon: <ListChecks size={13} />, onClick: onNavTracker, active: appMode === 'career' && view === 'tracker', highlight: false },
   ];
 
   return (
@@ -74,6 +77,8 @@ export function AppHeader({
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 item.active
                   ? 'bg-accent/10 text-accent'
+                  : item.highlight
+                  ? 'text-accent/80 hover:text-accent hover:bg-accent/8 border border-accent/20'
                   : 'text-text-muted hover:text-text-main hover:bg-slate-100'
               )}
             >

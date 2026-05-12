@@ -67,9 +67,42 @@ export default async function handler(req: any, res: any) {
 
   let pageText: string;
   try {
-    // Ashby HQ direct API
+    // ── LinkedIn Guest API (no login required) ──────────────────────────
+    // Extracts job ID from URLs like:
+    //   linkedin.com/jobs/view/1234567890
+    //   linkedin.com/jobs/view/software-engineer-at-google-1234567890
+    const linkedinMatch = url.match(/linkedin\.com\/jobs\/view\/(?:[^/?]+-)?(\d{7,20})/i);
+    if (linkedinMatch) {
+      const jobId = linkedinMatch[1];
+      const guestRes = await fetch(
+        `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${jobId}`,
+        {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
+          signal: AbortSignal.timeout(12000),
+        }
+      );
+      if (guestRes.ok) {
+        const html = await guestRes.text();
+        const stripped = html
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+          .replace(/\s+/g, ' ').trim();
+        if (stripped.length > 300) {
+          pageText = stripped.substring(0, 14000);
+        }
+      }
+    }
+
+    // ── Ashby HQ direct API ─────────────────────────────────────────────
     const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([^/]+)\/([a-f0-9-]{36})/i);
-    if (ashbyMatch) {
+    if (!pageText! && ashbyMatch) {
       const [, org, jobId] = ashbyMatch;
       const apiRes = await fetch(`https://api.ashbyhq.com/posting-api/job-board/${org}?includeCompensation=true`, {
         headers: { 'Accept': 'application/json' },

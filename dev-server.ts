@@ -16,6 +16,8 @@ import jdInput from './api/jd-input';
 import translateAnalysis from './api/translate-analysis';
 import suggestCompanies from './api/suggest-companies';
 import findJobs from './api/find-jobs';
+import agentParse from './api/agent-parse';
+import agentDiscover from './api/agent-discover';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -32,6 +34,8 @@ app.all('/api/jd-input', jdInput);
 app.all('/api/translate-analysis', translateAnalysis);
 app.all('/api/suggest-companies', suggestCompanies);
 app.all('/api/find-jobs', findJobs);
+app.all('/api/agent-parse', agentParse);
+app.all('/api/agent-discover', agentDiscover);
 
 const PORT = 3001;
 app.listen(PORT, () => {

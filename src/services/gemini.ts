@@ -82,3 +82,36 @@ export async function generateCareerInterviewQuestions(
 ): Promise<{ questions: import('../types').InterviewQuestion[] }> {
   return apiFetch('/api/career-questions', { background, analysis });
 }
+
+export interface ParsedResume {
+  major: string;
+  experience: string;
+  skills: string;
+  target_roles: string;
+  constraints: string;
+  location: string;
+  target_industries: string[];
+  career_level: 'entry' | 'mid' | 'senior' | 'executive';
+  resumeText: string;
+}
+
+export interface DiscoveredJob {
+  company_name: string;
+  role: string;
+  jd_url: string;
+  reason: string;
+}
+
+export async function agentParseResume(
+  fileData: string,
+  mimeType: string
+): Promise<ParsedResume> {
+  return apiFetch('/api/agent-parse', { fileData, mimeType });
+}
+
+export async function agentDiscoverJobs(
+  background: ParsedResume,
+  language: 'en' | 'ko' | 'zh'
+): Promise<{ jobs: DiscoveredJob[] }> {
+  return apiFetch('/api/agent-discover', { background, language });
+}

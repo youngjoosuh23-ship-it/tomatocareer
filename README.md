@@ -24,6 +24,62 @@
 - **Corporate Dashboard** — 기업 분석 뷰
 - **다국어 지원** — 한국어 / English / 中文
 
+### 전체 구조
+
+React 프론트엔드 + Vercel Serverless API 백엔드 구조이며, AI 엔진으로 **Google Gemini 2.5 Flash**를 사용합니다.
+
+#### 3가지 앱 모드
+
+| 모드 | 역할 |
+|------|------|
+| `career` | 메인 기능 — JD 분석 / 결과 / 이력서 재구성 |
+| `corporate` | 기업 분석 리포트 생성 |
+| `jobs` | 추천 기업 탐색 + 공고 찾기 |
+
+#### Career 모드 분석 플로우
+
+```
+[AnalysisForm] 배경 정보 + JD 입력
+      ↓
+/api/analyze  (회사별 순차 호출)
+      ↓
+/api/compare  (2개 이상일 때 비교)
+      ↓
+localStorage 저장 + Supabase 통계 전송
+      ↓
+[AnalysisResult] 결과 표시
+      ↓
+/api/rebuild  (선택) → 이력서 재작성
+```
+
+#### API 엔드포인트
+
+| 엔드포인트 | 역할 |
+|---|---|
+| `/api/analyze` | JD + 배경 → 적합도·갭·전략 분석 |
+| `/api/compare` | 여러 분석 → 순위/추천 비교 |
+| `/api/rebuild` | 분석 결과 → 이력서 재작성 |
+| `/api/jd-input` | URL 스크래핑 or 파일 → JD 텍스트 추출 |
+| `/api/career-questions` | 면접 예상 질문 생성 |
+| `/api/translate-analysis` | 분석 결과 언어 변환 |
+| `/api/corporate-analyze` | 기업 분석 리포트 생성 |
+| `/api/find-jobs` / `/api/suggest-companies` | 기업·공고 추천 |
+
+#### 분석 결과 주요 필드
+
+| 필드 | 설명 |
+|------|------|
+| `decision` | `APPLY` / `SKIP` / `REVISIT` |
+| `fit_score` | 0–100 종합 적합도 |
+| `hiring_probability` | 0–100 채용 가능성 |
+| `score_breakdown` | 직무·성장·문화·리스크·보상 5개 차원 세부 점수 |
+| `strengths` / `gaps` / `risks` | 강점·갭·리스크 |
+| `resume_bullets` / `resume_improvements` | 이력서 개선 제안 |
+| `application_checklist` | 지원 전 체크리스트 |
+| `missing_keywords` | JD에 있지만 이력서에 없는 키워드 |
+
+---
+
 ### 기술 스택
 
 | 영역 | 기술 |
@@ -93,6 +149,62 @@ VITE_SUPABASE_ANON_KEY
 - **Job Finder** — Explore and discover new positions
 - **Corporate Dashboard** — Company-level analysis view
 - **Multilingual** — English / 한국어 / 中文
+
+### Architecture
+
+React frontend + Vercel Serverless API backend, powered by **Google Gemini 2.5 Flash**.
+
+#### 3 App Modes
+
+| Mode | Purpose |
+|------|---------|
+| `career` | Core flow — JD analysis / results / resume rebuild |
+| `corporate` | Company analysis report generation |
+| `jobs` | Discover recommended companies & find openings |
+
+#### Career Mode Analysis Flow
+
+```
+[AnalysisForm] Enter background + JD
+      ↓
+/api/analyze  (sequential per company)
+      ↓
+/api/compare  (when 2+ companies)
+      ↓
+Save to localStorage + send stats to Supabase
+      ↓
+[AnalysisResult] Display results
+      ↓
+/api/rebuild  (optional) → Rewrite resume
+```
+
+#### API Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/api/analyze` | JD + background → fit score, gaps, strategy |
+| `/api/compare` | Multiple analyses → ranking & recommendation |
+| `/api/rebuild` | Analysis result → rewritten resume |
+| `/api/jd-input` | URL scraping or file → extract JD text |
+| `/api/career-questions` | Generate predicted interview questions |
+| `/api/translate-analysis` | Translate analysis results to target language |
+| `/api/corporate-analyze` | Generate company analysis report |
+| `/api/find-jobs` / `/api/suggest-companies` | Company & job discovery |
+
+#### Key Fields in Analysis Response
+
+| Field | Description |
+|-------|-------------|
+| `decision` | `APPLY` / `SKIP` / `REVISIT` |
+| `fit_score` | Overall fit 0–100 |
+| `hiring_probability` | Estimated hire chance 0–100 |
+| `score_breakdown` | Sub-scores across 5 dimensions: job fit, growth, culture, risk, compensation |
+| `strengths` / `gaps` / `risks` | Profile strengths, gaps, and risks |
+| `resume_bullets` / `resume_improvements` | Resume improvement suggestions |
+| `application_checklist` | Pre-application task checklist |
+| `missing_keywords` | JD keywords absent from the candidate's resume |
+
+---
 
 ### Tech Stack
 

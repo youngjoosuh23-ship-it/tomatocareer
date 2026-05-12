@@ -5,6 +5,7 @@ import { ResumeRebuilder } from './components/ResumeRebuilder';
 import { CorporateDashboard } from './components/CorporateDashboard';
 import { CareerHistoryView } from './components/CareerViews/CareerHistoryView';
 import { TrackerView } from './components/CareerViews/TrackerView';
+import { AgentView } from './components/AgentView';
 import { HeroSection } from './components/HeroSection';
 import { ServicesSection } from './components/ServicesSection';
 import { JobFinderView } from './components/JobFinderView';
@@ -20,7 +21,7 @@ import { useLoadingMessages } from './hooks/useLoadingMessages';
 
 export default function App() {
   const formRef = React.useRef<HTMLDivElement>(null);
-  const [appMode, setAppMode] = React.useState<'career' | 'corporate' | 'jobs'>('career');
+  const [appMode, setAppMode] = React.useState<'career' | 'corporate' | 'jobs' | 'agent'>('career');
   const [language, setLanguage] = React.useState<'en' | 'ko' | 'zh'>('en');
   const [prefillJob, setPrefillJob] = React.useState<{ companyName: string; role: string; jdText: string } | null>(null);
 
@@ -48,7 +49,7 @@ export default function App() {
   const currentLoadingMessage = useLoadingMessages(isLoading, language, loadingMessage);
 
   React.useEffect(() => {
-    if (appMode === 'corporate' || (view === 'form' && appMode === 'career')) {
+    if (appMode === 'corporate' || appMode === 'agent' || (view === 'form' && appMode === 'career')) {
       document.body.classList.add('form-view');
     } else {
       document.body.classList.remove('form-view');
@@ -69,9 +70,18 @@ export default function App() {
         onNavJobs={() => setAppMode('jobs')}
         onNavHistory={() => { setAppMode('career'); setView('history'); }}
         onNavTracker={() => { setAppMode('career'); setView('tracker'); }}
+        onNavAgent={() => setAppMode('agent')}
       />
 
-      {appMode === 'jobs' ? (
+      {appMode === 'agent' ? (
+        <AgentView
+          systemLanguage={language}
+          onDone={(analyses, comparison, background) => {
+            handleRestore(analyses, comparison, background);
+            setAppMode('career');
+          }}
+        />
+      ) : appMode === 'jobs' ? (
         <JobFinderView systemLanguage={language} />
       ) : appMode === 'career' ? (
         <main style={{ position: 'relative' }}>
