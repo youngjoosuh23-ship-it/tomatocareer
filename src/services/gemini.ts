@@ -109,9 +109,15 @@ export async function agentParseResume(
   return apiFetch('/api/agent-parse', { fileData, mimeType });
 }
 
+export interface FeedbackHints {
+  excluded_companies: string[];   // user_decision = 'not_interested'
+  preferred_roles: string[];      // role titles user chose to 'apply'
+}
+
 export async function agentDiscoverJobs(
   background: ParsedResume,
-  language: 'en' | 'ko' | 'zh'
+  language: 'en' | 'ko' | 'zh',
+  feedbackHints?: FeedbackHints
 ): Promise<{ jobs: DiscoveredJob[] }> {
-  return apiFetch('/api/agent-discover', { background, language });
+  return apiFetch('/api/agent-discover', { background, language, feedbackHints });
 }

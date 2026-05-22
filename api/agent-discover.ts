@@ -15,10 +15,12 @@ export default async function handler(req: any, res: any) {
   if (rl === 'minute') return res.status(429).json({ error: '잠깐! 1분에 5회까지만 사용할 수 있어요. 잠시 후 다시 시도해 주세요.' });
   if (rl === 'daily') return res.status(429).json({ error: '일일 무료 사용 횟수(10회)를 초과했습니다. 내일 다시 시도해주세요.' });
 
-  const { background, language = 'ko' } = req.body;
+  const { background, language = 'ko', feedbackHints } = req.body;
   if (!background?.target_roles) return res.status(400).json({ error: 'background with target_roles required' });
 
   const location: string = background.location || '';
+  const excludedCompanies: string[] = feedbackHints?.excluded_companies ?? [];
+  const preferredRoles: string[] = feedbackHints?.preferred_roles ?? [];
 
   const ai = createAI();
 
@@ -30,11 +32,13 @@ Skills: ${background.skills}
 Career Level: ${background.career_level || 'mid'}
 Industries: ${(background.target_industries || []).join(', ')}
 ${location ? `Preferred Location: ${location} — prioritize jobs in or near this location, or remote-friendly roles` : ''}
+${preferredRoles.length > 0 ? `User has previously shown interest in roles like: ${preferredRoles.join(', ')} — prioritize similar opportunities` : ''}
 
 Find 5 specific, real job postings with direct URLs to the job application pages.
 Include a mix of company sizes (large tech, mid-size, startup).
 For each job, provide: company name, exact job title, and the direct URL to apply.
-${location ? `Strongly prefer jobs located in ${location} or explicitly offering remote/hybrid options.` : ''}`;
+${location ? `Strongly prefer jobs located in ${location} or explicitly offering remote/hybrid options.` : ''}
+${excludedCompanies.length > 0 ? `IMPORTANT: Do NOT suggest jobs at these companies (user is not interested): ${excludedCompanies.join(', ')}` : ''}`;
 
   try {
     const searchResponse = await withRetry(async () => {
@@ -96,7 +100,8 @@ For each job return:
 Rules:
 - jd_url must be a real URL (no placeholder text)
 - Prefer specific job posting URLs over general careers homepages
-- If a URL is from LinkedIn, Indeed, Greenhouse, Lever, or Ashby, it's likely a job posting`,
+- If a URL is from LinkedIn, Indeed, Greenhouse, Lever, or Ashby, it's likely a job posting
+${excludedCompanies.length > 0 ? `- EXCLUDE any jobs at these companies: ${excludedCompanies.join(', ')}` : ''}`,
         config: {
           temperature: 0,
           responseMimeType: 'application/json',

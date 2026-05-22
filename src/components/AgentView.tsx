@@ -1,6 +1,7 @@
 import React from 'react';
 import { Upload, CheckCircle2, Circle, Loader2, AlertCircle, RefreshCw, Sparkles, X } from 'lucide-react';
-import { agentParseResume, agentDiscoverJobs, ParsedResume } from '../services/gemini';
+import { agentParseResume, agentDiscoverJobs, ParsedResume, FeedbackHints } from '../services/gemini';
+import { loadLocalFeedback } from '../services/supabaseService';
 import { analyzeJobOpportunity, compareJobOpportunities, scrapeJD } from '../services/gemini';
 import { AnalysisResponse, ComparisonResult, UserBackground } from '../types';
 import { saveToHistory } from '../services/careerHistoryService';
@@ -42,6 +43,17 @@ const activeStepIndex = (step: AgentStep): number =>
 
 const L = (ko: string, en: string, lang: 'en' | 'ko' | 'zh') =>
   lang === 'ko' || lang === 'zh' ? ko : en;
+
+function buildFeedbackHints(): FeedbackHints {
+  const feedback = loadLocalFeedback();
+  const excluded = [...new Set(
+    feedback.filter(f => f.user_decision === 'not_interested').map(f => f.company)
+  )];
+  const preferred = [...new Set(
+    feedback.filter(f => f.user_decision === 'apply').map(f => f.role)
+  )];
+  return { excluded_companies: excluded, preferred_roles: preferred };
+}
 
 interface Props {
   systemLanguage: 'en' | 'ko' | 'zh';
@@ -105,9 +117,10 @@ export function AgentView({ systemLanguage: lang, onDone }: Props) {
       if (cancelRef.current) return;
       setParsedResume(parsed);
 
-      // ── Step 2: Discover jobs ─────────────────────────────────────────
+      // ── Step 2: Discover jobs (personalized with past feedback) ──────
       setStep('discovering');
-      const { jobs: discovered } = await agentDiscoverJobs(parsed, lang);
+      const feedbackHints = buildFeedbackHints();
+      const { jobs: discovered } = await agentDiscoverJobs(parsed, lang, feedbackHints);
       if (cancelRef.current) return;
       setJobCount(discovered.length);
 
