@@ -133,3 +133,61 @@ export async function saveDeadline(applicationId: string, deadline: string, emai
     notified: false,
   });
 }
+
+// User feedback — stored locally + synced to Supabase for personalization
+// SQL:
+//   create table user_feedback (
+//     id uuid primary key default gen_random_uuid(),
+//     user_id uuid references auth.users,
+//     created_at timestamptz default now(),
+//     company text not null,
+//     role text not null,
+//     fit_score int,
+//     hiring_probability int,
+//     ai_decision text,
+//     user_decision text not null
+//   );
+//   alter table user_feedback enable row level security;
+//   create policy "own rows" on user_feedback for all using (auth.uid() = user_id);
+
+export interface UserFeedback {
+  company: string;
+  role: string;
+  fit_score: number;
+  hiring_probability: number;
+  ai_decision: string;
+  user_decision: 'apply' | 'skip' | 'not_interested';
+  created_at: string;
+}
+
+export async function submitFeedback(feedback: Omit<UserFeedback, 'created_at'>) {
+  const record: UserFeedback = { ...feedback, created_at: new Date().toISOString() };
+
+  // Always save to localStorage (works without login)
+  try {
+    const existing: UserFeedback[] = JSON.parse(localStorage.getItem('career_feedback') ?? '[]');
+    existing.unshift(record);
+    localStorage.setItem('career_feedback', JSON.stringify(existing.slice(0, 500)));
+  } catch {
+    // storage full — ignore
+  }
+
+  // Sync to Supabase if logged in
+  if (!isSupabaseConfigured) return;
+  try {
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('user_feedback').insert({ ...record, user_id: user.id });
+  } catch {
+    // silent fail — localStorage is the source of truth
+  }
+}
+
+export function loadLocalFeedback(): UserFeedback[] {
+  try {
+    return JSON.parse(localStorage.getItem('career_feedback') ?? '[]');
+  } catch {
+    return [];
+  }
+}

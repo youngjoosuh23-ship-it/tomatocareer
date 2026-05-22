@@ -9,10 +9,13 @@ import {
   Download,
   TrendingUp,
   TrendingDown,
+  ThumbsUp,
+  ThumbsDown,
+  Minus,
 } from 'lucide-react';
 import { translations } from '../lib/translations';
 import { saveApplication } from '../services/trackerService';
-import { fetchBenchmarkStats } from '../services/supabaseService';
+import { fetchBenchmarkStats, submitFeedback } from '../services/supabaseService';
 import { CopyButton } from './ui/CopyButton';
 import { OverviewTab } from './result/tabs/OverviewTab';
 import { AnalysisTab } from './result/tabs/AnalysisTab';
@@ -79,6 +82,7 @@ export function AnalysisResult({ results, comparison, onReset, onRebuild, system
   const t = translations[systemLanguage];
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [appliedIds, setAppliedIds] = React.useState<Set<string>>(new Set());
+  const [feedbackMap, setFeedbackMap] = React.useState<Record<string, 'apply' | 'skip' | 'not_interested'>>({});
   const [benchmarkStats, setBenchmarkStats] = React.useState<{ count: number; avgFit: number; avgHire: number } | null>(null);
   const [activeTab, setActiveTab] = React.useState<'overview' | 'analysis' | 'strategy' | 'checklist'>('overview');
 
@@ -94,6 +98,21 @@ export function AnalysisResult({ results, comparison, onReset, onRebuild, system
     setAppliedIds(prev => new Set(prev).add(`${data.company}-${data.role}`));
   };
   const isApplied = appliedIds.has(`${data.company}-${data.role}`);
+
+  const feedbackKey = `${data.company}-${data.role}`;
+  const currentFeedback = feedbackMap[feedbackKey];
+
+  const handleFeedback = (decision: 'apply' | 'skip' | 'not_interested') => {
+    setFeedbackMap(prev => ({ ...prev, [feedbackKey]: decision }));
+    submitFeedback({
+      company: data.company,
+      role: data.role,
+      fit_score: data.fit_score,
+      hiring_probability: data.hiring_probability,
+      ai_decision: data.decision,
+      user_decision: decision,
+    });
+  };
 
   const getFitColor = (score: number) => {
     if (score >= 75) return 'text-emerald-600';
@@ -270,6 +289,35 @@ export function AnalysisResult({ results, comparison, onReset, onRebuild, system
             <Download size={14} />
           </button>
           <CopyButton text={buildMd(data)} label={t.copy} copiedLabel={t.copied} />
+        </div>
+      </div>
+
+      {/* Feedback strip */}
+      <div className="flex items-center gap-2 py-2 mb-1">
+        <span className="text-xs text-text-muted shrink-0">
+          {systemLanguage === 'ko' ? '이 공고 어떻게 하실 건가요?' : 'What will you do with this job?'}
+        </span>
+        <div className="flex gap-1.5 ml-auto">
+          {([
+            { key: 'apply' as const, label: systemLanguage === 'ko' ? '지원' : 'Apply', icon: <ThumbsUp size={11} />, active: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+            { key: 'skip' as const, label: systemLanguage === 'ko' ? '패스' : 'Skip', icon: <ThumbsDown size={11} />, active: 'bg-red-50 text-red-600 border-red-200' },
+            { key: 'not_interested' as const, label: systemLanguage === 'ko' ? '관심없음' : 'Not interested', icon: <Minus size={11} />, active: 'bg-slate-100 text-slate-600 border-slate-300' },
+          ] as const).map(({ key, label, icon, active }) => (
+            <button
+              key={key}
+              onClick={() => handleFeedback(key)}
+              className={cn(
+                'flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all',
+                currentFeedback === key
+                  ? active
+                  : 'text-text-muted border-border-theme hover:border-slate-300 hover:text-text-main bg-white'
+              )}
+            >
+              {icon}
+              {label}
+              {currentFeedback === key && <CheckCircle2 size={10} className="ml-0.5" />}
+            </button>
+          ))}
         </div>
       </div>
 
