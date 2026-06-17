@@ -57,6 +57,7 @@ export function JobCard({
   onCompanyUpdate,
   t,
 }: JobCardProps) {
+  const [liveness, setLiveness] = React.useState<'active' | 'closed' | 'unknown'>('unknown');
   const handleJdFetch = async () => {
     if (!jdUrl.trim()) return;
     onFetchStateChange('loading');
@@ -67,6 +68,7 @@ export function JobCard({
         role: data.role || company.role,
         jd_text: data.jd_text,
       });
+      setLiveness(data.liveness ?? 'unknown');
       onFetchStateChange('success');
       setTimeout(() => {
         onFetchStateChange('idle');
@@ -108,6 +110,12 @@ export function JobCard({
 
   return (
     <div style={{ ...JOB_CARD, animationDelay: `${index * 50}ms` }} className="animate-in">
+      {liveness === 'closed' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', marginBottom: 16, borderRadius: 10, background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)', fontSize: 12, color: '#92400e', fontWeight: 600 }}>
+          <AlertCircle size={14} style={{ flexShrink: 0, color: '#d97706' }} />
+          이 공고는 마감된 것으로 보여요. 분석을 계속 진행할 수 있지만 실제 지원은 어려울 수 있어요.
+        </div>
+      )}
       {/* Card header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, fontWeight: 600 }}>

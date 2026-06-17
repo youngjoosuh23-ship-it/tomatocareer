@@ -38,7 +38,7 @@ export async function rebuildResume(
   return apiFetch<{ rebuilt_resume: string }>('/api/rebuild', { background, analysis });
 }
 
-export async function scrapeJD(url: string): Promise<{ company_name: string; role: string; jd_text: string }> {
+export async function scrapeJD(url: string): Promise<{ company_name: string; role: string; jd_text: string; liveness?: 'active' | 'closed' | 'unknown' }> {
   return apiFetch('/api/jd-input', { url });
 }
 

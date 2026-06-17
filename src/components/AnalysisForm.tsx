@@ -5,6 +5,8 @@ import { translations } from '../lib/translations';
 import * as pdfjsLib from 'pdfjs-dist';
 import { JobCard } from './form/JobCard';
 import { PriorityRanker } from './form/PriorityRanker';
+import { useUserProfile } from '../hooks/useUserProfile';
+import { saveProfileToCloud } from '../services/supabaseService';
 
 if (typeof ReadableStream !== 'undefined' && !ReadableStream.prototype[Symbol.asyncIterator]) {
   (ReadableStream.prototype as any)[Symbol.asyncIterator] = async function* (this: ReadableStream) {
@@ -84,6 +86,16 @@ export function AnalysisForm({ onAnalyze, isLoading, systemLanguage, contentLang
   const [isParsing, setIsParsing] = React.useState(false);
   const [inputMethod, setInputMethod] = React.useState<'manual' | 'upload' | 'paste'>('manual');
 
+  const { cloudProfile, profileLoaded } = useUserProfile();
+  const profileAppliedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!profileLoaded || !cloudProfile || profileAppliedRef.current) return;
+    profileAppliedRef.current = true;
+    setBackground(prev => ({ ...cloudProfile, content_language: prev.content_language }));
+    if (cloudProfile.fileName) setFileName(cloudProfile.fileName);
+  }, [profileLoaded, cloudProfile]);
+
   const [jdInputMethods, setJdInputMethods] = React.useState<Array<'url' | 'text' | 'file'>>(['text']);
   const [jdUrls, setJdUrls] = React.useState<string[]>(['']);
   const [jdFetchStates, setJdFetchStates] = React.useState<Array<'idle' | 'loading' | 'success' | 'error' | 'login'>>(['idle']);
@@ -161,6 +173,7 @@ export function AnalysisForm({ onAnalyze, isLoading, systemLanguage, contentLang
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    saveProfileToCloud(background).catch(() => {});
     onAnalyze(background, companies);
   };
 

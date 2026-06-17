@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, ChevronRight, StickyNote } from 'lucide-react';
+import { Trash2, ChevronRight, StickyNote, Bell } from 'lucide-react';
+import { getCadenceStatus, CADENCE_LABEL } from '../../lib/followupCadence';
 import {
   ApplicationRecord,
   ApplicationStatus,
@@ -80,6 +81,17 @@ export function TrackerView({ systemLanguage }: Props) {
                   <span className="font-bold text-sm truncate">{app.company}</span>
                   <span className="text-text-muted text-xs truncate">· {app.role}</span>
                   <span className="text-[10px] font-bold text-text-muted">Fit {app.analysis.fit_score}%</span>
+                  {(() => {
+                    const cadence = getCadenceStatus(app.createdAt, app.status);
+                    if (cadence.type === 'inactive' || cadence.type === 'waiting') return null;
+                    const c = CADENCE_LABEL[cadence.type];
+                    return (
+                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0', c.color)}>
+                        <Bell size={9} />
+                        {c[lang]}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <button onClick={() => handleDelete(app.id)} className="text-text-muted hover:text-rose-500 transition-colors shrink-0">
                   <Trash2 size={14} />

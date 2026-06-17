@@ -4,6 +4,23 @@ import { createAI, withRetry, getClientIp, checkRateLimit } from "./_shared";
 // Handles both JD URL scraping and JD file parsing in one function.
 // Request body: { url } for scraping, { fileData, mimeType } for file upload.
 
+function detectLiveness(text: string): 'active' | 'closed' | 'unknown' {
+  const lower = text.toLowerCase();
+  const closedSignals = [
+    'this job is no longer available',
+    'position has been filled',
+    'job posting has expired',
+    'this posting has expired',
+    'this job has been closed',
+    'no longer accepting applications',
+    '채용이 마감', '모집이 종료', '채용공고가 마감', '지원이 마감',
+  ];
+  if (closedSignals.some(s => lower.includes(s))) return 'closed';
+  const hasApply = /apply\s*(now|for this|here)?/i.test(text) || text.includes('지원하기');
+  if (hasApply && text.length > 500) return 'active';
+  return 'unknown';
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -170,6 +187,8 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Failed to fetch URL' });
   }
 
+  const liveness = detectLiveness(pageText);
+
   try {
     const ai = createAI();
     const result = await withRetry(async () => {
@@ -186,7 +205,7 @@ export default async function handler(req: any, res: any) {
       if (!response.text) throw new Error("No response from AI");
       return JSON.parse(response.text);
     });
-    return res.json(result);
+    return res.json({ ...result, liveness });
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to extract job description from page' });
   }

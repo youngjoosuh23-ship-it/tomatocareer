@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
-import { AnalysisResponse, ComparisonResult, UserBackground } from '../types';
+import { UserBackground } from '../types';
 import { ApplicationRecord } from './trackerService';
 import { CareerHistoryItem } from './careerHistoryService';
 
@@ -121,6 +121,57 @@ export async function fetchBenchmarkStats(company: string, role: string) {
   const avgFit = Math.round(data.reduce((s: number, r: any) => s + r.fit_score, 0) / data.length);
   const avgHire = Math.round(data.reduce((s: number, r: any) => s + r.hiring_probability, 0) / data.length);
   return { count: data.length, avgFit, avgHire };
+}
+
+// User profiles — persistent background across sessions
+// SQL:
+//   create table user_profiles (
+//     id uuid primary key references auth.users,
+//     major text, experience text, skills text,
+//     target_roles text, constraints text, resume_text text,
+//     priorities jsonb, content_language text default 'ko',
+//     updated_at timestamptz default now()
+//   );
+//   alter table user_profiles enable row level security;
+//   create policy "own row" on user_profiles for all using (auth.uid() = id);
+
+export async function loadProfileFromCloud(): Promise<UserBackground | null> {
+  if (!isSupabaseConfigured) return null;
+  const supabase = getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('user_profiles').select('*').eq('id', user.id).single();
+  if (!data) return null;
+  return {
+    major: data.major ?? '',
+    experience: data.experience ?? '',
+    skills: data.skills ?? '',
+    target_roles: data.target_roles ?? '',
+    constraints: data.constraints ?? '',
+    resumeText: data.resume_text ?? '',
+    fileName: '',
+    content_language: data.content_language ?? 'ko',
+    priorities: data.priorities ?? undefined,
+  };
+}
+
+export async function saveProfileToCloud(background: UserBackground): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const supabase = getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('user_profiles').upsert({
+    id: user.id,
+    major: background.major,
+    experience: background.experience,
+    skills: background.skills,
+    target_roles: background.target_roles,
+    constraints: background.constraints,
+    resume_text: background.resumeText ?? '',
+    priorities: background.priorities ?? null,
+    content_language: background.content_language,
+    updated_at: new Date().toISOString(),
+  });
 }
 
 // Deadline notification data (used by edge function)

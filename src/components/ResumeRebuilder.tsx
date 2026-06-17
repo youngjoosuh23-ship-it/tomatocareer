@@ -140,6 +140,12 @@ export function ResumeRebuilder({ analysis, background, rebuiltResume: initialRe
       <div className="text-center space-y-2 mb-8">
         <h1 className="text-2xl font-extrabold text-text-main tracking-tight">{t.resumeRebuilderTitle}</h1>
         <p className="text-sm text-text-muted max-w-xl mx-auto leading-relaxed">{t.resumeRebuilderDesc}</p>
+        {analysis.archetype && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-accent/10 text-accent border border-accent/20">
+            <Sparkles size={11} />
+            {analysis.archetype}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

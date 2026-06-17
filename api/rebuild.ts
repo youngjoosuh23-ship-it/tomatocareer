@@ -20,6 +20,19 @@ export default async function handler(req: any, res: any) {
 
   const languageName = background.content_language === 'ko' ? 'Korean' : background.content_language === 'zh' ? 'Chinese' : 'English';
 
+  const archetypeFraming: Record<string, { lead: string; deemphasize: string }> = {
+    'Marketing':        { lead: 'campaign execution, audience growth metrics, content performance, brand voice', deemphasize: 'technical implementation details, lab work' },
+    'Product/PM':       { lead: 'problem discovery, data-driven decisions, cross-functional stakeholder alignment, roadmap ownership', deemphasize: 'execution-only tasks without strategic framing' },
+    'Sales/BD':         { lead: 'revenue numbers, pipeline metrics, client relationships, quota attainment, persuasion outcomes', deemphasize: 'internal process work without business impact' },
+    'Operations':       { lead: 'process systematization, efficiency gains, coordination across teams, zero-defect execution', deemphasize: 'individual contributor output without operational scale' },
+    'Engineering':      { lead: 'tech stack, system design decisions, shipped products, performance improvements', deemphasize: 'soft skills and non-technical achievements' },
+    'Research/Science': { lead: 'analytical rigor, methodology, publications or findings, precision and accuracy', deemphasize: 'operational or commercial experience without research framing' },
+  };
+  const framing = archetypeFraming[analysis.archetype ?? ''];
+  const archetypeNote = framing
+    ? `\n## Role Archetype: ${analysis.archetype}\nFraming strategy — Lead with: ${framing.lead}. De-emphasize: ${framing.deemphasize}. Reorder bullets so the most archetype-relevant achievement appears first.\n`
+    : '';
+
   const prompt = `
 ## Candidate Background
 - Education/Major: ${background.major}
@@ -48,7 +61,7 @@ ${analysis.resume_improvements.map((imp: string, i: number) => `${i + 1}. ${imp}
 
 ## Gap Analysis
 ${analysis.resume_gap_analysis.map((g: string) => `- ${g}`).join('\n')}
-
+${archetypeNote}
 ---
 
 Rebuild this candidate's resume using all the analysis above. Apply the following three principles without exception:

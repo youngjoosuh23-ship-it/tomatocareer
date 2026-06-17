@@ -64,6 +64,8 @@ export interface AnalysisResponse {
   culture_summary: string;
   missing_keywords: string[];
   application_checklist: { item: string; category: string }[];
+  archetype?: 'Marketing' | 'Product/PM' | 'Sales/BD' | 'Operations' | 'Engineering' | 'Research/Science';
+  lab_technique_match?: LabTechniqueMatch;
 }
 
 export interface ComparisonResult {
@@ -120,6 +122,28 @@ export interface FutureDirection {
   newMarketStrategy: string;
 }
 
+export interface ClinicalPipeline {
+  total: number;
+  recruiting: number;
+  byPhase: { phase: string; count: number }[];
+  therapeuticAreas: string[];
+  note: string;
+}
+
+export interface FundingInfo {
+  stage: string;
+  lastRound: string;
+  totalRaised: string;
+  keyInvestors: string[];
+  hiringOutlook: string;
+}
+
+export interface LabTechniqueMatch {
+  required: string[];
+  matched: string[];
+  missing: string[];
+}
+
 export interface CorporateAnalysisReport {
   overview: CompanyOverview;
   product: ProductAnalysis;
@@ -127,6 +151,8 @@ export interface CorporateAnalysisReport {
   financials: FinancialIndicator[];
   competitors: Competitor[];
   future: FutureDirection;
+  pipeline?: ClinicalPipeline;
+  funding?: FundingInfo;
   dataVerification: {
     sources: string[];
     accuracyNotes: string;

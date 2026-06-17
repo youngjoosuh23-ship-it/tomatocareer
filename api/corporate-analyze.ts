@@ -1,5 +1,51 @@
 import { createAI, getClientIp, withRetry, checkRateLimit } from "./_shared";
 
+async function fetchClinicalTrials(company: string): Promise<{
+  total: number; recruiting: number;
+  byPhase: { phase: string; count: number }[];
+  therapeuticAreas: string[];
+  note: string;
+} | null> {
+  try {
+    const url = `https://clinicaltrials.gov/api/v2/studies?query.term=${encodeURIComponent(company)}&pageSize=40&fields=Phase,OverallStatus,Condition`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const studies = data.studies ?? [];
+    if (studies.length === 0) return null;
+
+    const phaseCount: Record<string, number> = {};
+    const areas = new Set<string>();
+    let recruiting = 0;
+
+    for (const s of studies) {
+      const status = s.protocolSection?.statusModule?.overallStatus ?? '';
+      const phases: string[] = s.protocolSection?.designModule?.phases ?? ['N/A'];
+      const conditions: string[] = s.protocolSection?.conditionsModule?.conditions ?? [];
+
+      if (['RECRUITING', 'ACTIVE_NOT_RECRUITING', 'NOT_YET_RECRUITING'].includes(status)) recruiting++;
+      for (const phase of phases) {
+        phaseCount[phase] = (phaseCount[phase] ?? 0) + 1;
+      }
+      conditions.slice(0, 2).forEach(c => areas.add(c));
+    }
+
+    const byPhase = Object.entries(phaseCount)
+      .map(([phase, count]) => ({ phase: phase.replace('PHASE', 'Phase '), count }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      total: data.totalCount ?? studies.length,
+      recruiting,
+      byPhase,
+      therapeuticAreas: [...areas].slice(0, 6),
+      note: `ClinicalTrials.gov 기준 (${new Date().toLocaleDateString('ko-KR')})`,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -12,12 +58,18 @@ export default async function handler(req: any, res: any) {
   const { companyName, language = 'ko' } = req.body;
   const langLabel = language === 'ko' ? 'Korean' : language === 'zh' ? 'Traditional Chinese' : 'English';
 
+  const pipeline = await fetchClinicalTrials(companyName);
+  const pipelineContext = pipeline
+    ? `\n[ClinicalTrials.gov Data — use this as ground truth for pipeline section]\nTotal trials: ${pipeline.total}, Active/Recruiting: ${pipeline.recruiting}\nBy Phase: ${pipeline.byPhase.map(p => `${p.phase}(${p.count})`).join(', ')}\nTherapeutic Areas: ${pipeline.therapeuticAreas.join(', ')}\n`
+    : '\n[No ClinicalTrials.gov data found — company may not run clinical trials (MedTech device company, etc.)]\n';
+
   try {
     const ai = createAI();
     const result = await withRetry(async () => {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Analyze the company "${companyName}" with a focus on data accuracy and recent updates.
+${pipelineContext}
 
     CRITICAL INSTRUCTIONS:
     1. Use Google Search to find information from official and highly reliable sources:
@@ -63,6 +115,20 @@ export default async function handler(req: any, res: any) {
         "growthEngines": "string (future growth drivers and strategies)",
         "newMarketStrategy": "string (new market entry plans)"
       },
+      "pipeline": {
+        "total": "number (total clinical trial count, 0 if none)",
+        "recruiting": "number (actively recruiting trials)",
+        "byPhase": [{ "phase": "string (e.g. Phase 1)", "count": "number" }],
+        "therapeuticAreas": ["string (disease/condition area)"],
+        "note": "string (data source note or explanation if no trials found)"
+      },
+      "funding": {
+        "stage": "string (one of: Seed, Series A, Series B, Series C+, IPO/Public, Subsidiary/Division, Unknown)",
+        "lastRound": "string (e.g. Series B $120M, 2023-09 — or 'N/A' if public/subsidiary)",
+        "totalRaised": "string (total funding raised — or market cap if public)",
+        "keyInvestors": ["string (notable investor names)"],
+        "hiringOutlook": "string (2 sentences: what this funding stage means for hiring — stability, growth velocity, role scope)"
+      },
       "dataVerification": {
         "sources": ["string (URL or source name)", "..."],
         "accuracyNotes": "string (notes on data reliability and any caveats)",
@@ -79,7 +145,10 @@ export default async function handler(req: any, res: any) {
       const raw = response.text.trim();
       const jsonMatch = raw.match(/```json\s*([\s\S]*?)```/) || raw.match(/(\{[\s\S]*\})/);
       if (!jsonMatch) throw new Error("Could not parse JSON from response");
-      return JSON.parse(jsonMatch[1]);
+      const parsed = JSON.parse(jsonMatch[1]);
+      // ClinicalTrials.gov 실제 데이터로 AI 추정값 덮어쓰기
+      if (pipeline) parsed.pipeline = pipeline;
+      return parsed;
     });
 
     return res.json(result);

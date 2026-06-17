@@ -743,6 +743,87 @@ export function CorporateDashboard({ systemLanguage }: { systemLanguage?: 'en' |
                   </Card>
                 </div>
 
+                {/* Biotech Pipeline */}
+                {(isLoading || report?.pipeline) && (
+                  <Card title="🧬 Clinical Pipeline (ClinicalTrials.gov)">
+                    <div className="p-8 space-y-5">
+                      {isLoading ? (
+                        <div className="space-y-3">
+                          <div className="h-5 bg-natural-sidebar animate-pulse rounded w-1/3" />
+                          <div className="h-16 bg-natural-sidebar animate-pulse rounded w-full" />
+                        </div>
+                      ) : report?.pipeline && (
+                        <>
+                          <div className="flex gap-6">
+                            <div className="text-center">
+                              <div className="text-3xl font-black text-natural-accent">{report.pipeline.total}</div>
+                              <div className="text-[11px] text-natural-muted mt-0.5">전체 임상</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-3xl font-black text-emerald-600">{report.pipeline.recruiting}</div>
+                              <div className="text-[11px] text-natural-muted mt-0.5">진행 중</div>
+                            </div>
+                          </div>
+                          {report.pipeline.byPhase.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {report.pipeline.byPhase.map((p, i) => (
+                                <span key={i} className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs font-bold text-blue-700">
+                                  {p.phase} · {p.count}건
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {report.pipeline.therapeuticAreas.length > 0 && (
+                            <div>
+                              <div className="text-[11px] font-bold text-natural-muted mb-2">치료 영역</div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {report.pipeline.therapeuticAreas.map((area, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-natural-sidebar rounded text-[11px] text-natural-muted">{area}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="text-[11px] text-natural-muted">{report.pipeline.note}</div>
+                        </>
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Funding / Stage */}
+                {(isLoading || report?.funding) && (
+                  <Card title="💰 Funding & Hiring Outlook">
+                    <div className="p-8 space-y-4">
+                      {isLoading ? (
+                        <div className="space-y-3">
+                          <div className="h-5 bg-natural-sidebar animate-pulse rounded w-1/4" />
+                          <div className="h-12 bg-natural-sidebar animate-pulse rounded w-full" />
+                        </div>
+                      ) : report?.funding && (
+                        <>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="px-4 py-1.5 bg-violet-100 text-violet-700 border border-violet-200 rounded-full text-sm font-black">{report.funding.stage}</span>
+                            {report.funding.lastRound && report.funding.lastRound !== 'N/A' && (
+                              <span className="text-sm text-natural-muted">{report.funding.lastRound}</span>
+                            )}
+                            {report.funding.totalRaised && (
+                              <span className="text-sm font-bold text-natural-accent">{report.funding.totalRaised}</span>
+                            )}
+                          </div>
+                          {report.funding.keyInvestors.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {report.funding.keyInvestors.map((inv, i) => (
+                                <span key={i} className="px-2 py-0.5 bg-natural-sidebar border border-natural-border/50 rounded text-[11px] text-natural-muted">{inv}</span>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-sm text-natural-muted leading-relaxed">{report.funding.hiringOutlook}</p>
+                        </>
+                      )}
+                    </div>
+                  </Card>
+                )}
+
                 {/* 7. 데이터 신뢰성 검증 */}
                 <Card title="7. Source & Accuracy Verification">
                   <div className="p-8 space-y-6">

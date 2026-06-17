@@ -50,7 +50,15 @@ ${background.resumeText ? `\n[Resume Content]\n${background.resumeText}` : ''}${
 [Job Description]
 ${company.jd_text}
 
-Analyze the company and role to identify what type of candidate they truly prefer.
+First, classify this role into exactly one archetype:
+- Marketing: campaign, brand, content, SEO, GTM, growth, awareness
+- Product/PM: roadmap, PRD, sprint, stakeholder, backlog, discovery
+- Sales/BD: pipeline, quota, B2B, revenue, hunter, account, closing
+- Operations: process, SOP, cross-functional, efficiency, logistics, coordination
+- Engineering: stack, deploy, API, backend, frontend, code, architecture
+- Research/Science: laboratory, R&D, publication, analysis, experiment, data science
+
+Then, analyze the company and role to identify what type of candidate they truly prefer.
 Estimate the most likely reasons this candidate would be rejected and suggest improvement actions.
 Provide a final decision (APPLY, SKIP, or REVISIT) with detailed reasoning.
 
@@ -76,6 +84,7 @@ Additionally, provide:
 5. Culture Summary: 2-3 sentences describing the company's work culture, values, and team environment based on the JD signals.
 6. Missing Keywords: Important technical skills, tools, or domain terms from the JD that are absent from the candidate's resume/background. List only terms that are genuinely missing.
 7. Application Checklist: 8-10 concrete pre-application tasks with categories (e.g. "Resume", "Networking", "Research", "Interview Prep").
+8. Lab Technique Match (Research/Science archetype only): Extract all specific laboratory techniques, instruments, and methods mentioned in the JD (e.g. CRISPR, flow cytometry, ELISA, PCR, Western blot, sequencing platforms). Then classify each as matched (present in candidate background) or missing. Skip this if the role is not Research/Science.
 
 SCORING RULES (MUST follow exactly):
 - fit_score: integer from 0 to 100 (e.g. 72). This is the overall weighted fit percentage.
@@ -139,6 +148,15 @@ IMPORTANT: You MUST return all text fields in ${languageName}.
               },
               culture_summary: { type: Type.STRING },
               missing_keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+              lab_technique_match: {
+                type: Type.OBJECT,
+                properties: {
+                  required: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  matched:  { type: Type.ARRAY, items: { type: Type.STRING } },
+                  missing:  { type: Type.ARRAY, items: { type: Type.STRING } },
+                },
+              },
+              archetype: { type: Type.STRING, enum: ['Marketing', 'Product/PM', 'Sales/BD', 'Operations', 'Engineering', 'Research/Science'] },
               application_checklist: {
                 type: Type.ARRAY,
                 items: {
@@ -157,7 +175,7 @@ IMPORTANT: You MUST return all text fields in ${languageName}.
               "priority", "key_reasons", "strengths", "gaps", "risks", "strategy",
               "resume_bullets", "next_action", "resume_gap_analysis", "resume_improvements",
               "role_insights", "actionable_next_steps", "hiring_probability", "score_breakdown",
-              "culture_summary", "missing_keywords", "application_checklist"
+              "culture_summary", "missing_keywords", "application_checklist", "archetype"
             ]
           }
         },
